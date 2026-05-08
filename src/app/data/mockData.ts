@@ -208,84 +208,12 @@ export const BOOKING_HISTORY = [
 ];
 
 // Solicitudes que le llegan a un técnico (de parte del cliente)
-export const PENDING_REQUESTS = [
-  {
-    id: 'req-001',
-    clientName: CLIENT.name,
-    clientInitials: CLIENT.initials,
-    clientPhone: CLIENT.phone,
-    location: CLIENT.location,
-    date: '2026-04-22',
-    time: '10:00 AM',
-    price: 850,
-    status: 'pending' as const,
-    urgent: true,
-    description: 'Necesito instalar 3 luminarias en el comedor y revisar el cableado de la cocina. Hay un apagador que no funciona.',
-  },
-  {
-    id: 'req-002',
-    clientName: 'Roberto Silva Méndez',
-    clientInitials: 'RS',
-    clientPhone: '+52 55 6677 8899',
-    location: 'Col. Roma Norte, CDMX',
-    date: '2026-04-23',
-    time: '2:00 PM',
-    price: 650,
-    status: 'pending' as const,
-    urgent: false,
-    description: 'Revisión general del sistema en departamento de 80 m². Mantenimiento preventivo anual.',
-  },
-  {
-    id: 'req-003',
-    clientName: 'Ana Patricia Jiménez',
-    clientInitials: 'AJ',
-    clientPhone: '+52 55 4455 6677',
-    location: 'Polanco, CDMX',
-    date: '2026-04-22',
-    time: '5:00 PM',
-    price: 1200,
-    status: 'pending' as const,
-    urgent: true,
-    description: 'Cortocircuito en la sala, necesito atención urgente. Sin luz en dos cuartos.',
-  },
-];
+// VACÍO PARA CUENTAS NUEVAS DE TÉCNICOS
+export const PENDING_REQUESTS = [];
 
 // Trabajos próximos confirmados (cliente = María + otros)
-export const UPCOMING_JOBS = [
-  {
-    id: 'uj-001',
-    clientName: CLIENT.name,
-    clientInitials: CLIENT.initials,
-    clientPhone: CLIENT.phone,
-    service: 'Instalación eléctrica residencial',
-    location: CLIENT.location,
-    date: '2026-04-25',
-    time: '10:00 AM',
-    price: 1050,
-  },
-  {
-    id: 'uj-002',
-    clientName: 'Roberto Silva Méndez',
-    clientInitials: 'RS',
-    clientPhone: '+52 55 6677 8899',
-    service: 'Mantenimiento preventivo',
-    location: 'Col. Roma Norte, CDMX',
-    date: '2026-04-26',
-    time: '11:00 AM',
-    price: 650,
-  },
-  {
-    id: 'uj-003',
-    clientName: 'Ana Patricia Jiménez',
-    clientInitials: 'AJ',
-    clientPhone: '+52 55 4455 6677',
-    service: 'Instalación de luminarias',
-    location: 'Polanco, CDMX',
-    date: '2026-04-27',
-    time: '3:00 PM',
-    price: 800,
-  },
-];
+// VACÍO PARA CUENTAS NUEVAS DE TÉCNICOS
+export const UPCOMING_JOBS = [];
 
 // Agenda del técnico
 export const SCHEDULE_DATA: Record<string, Array<{
@@ -367,80 +295,8 @@ export const SCHEDULE_DATA: Record<string, Array<{
 };
 
 // Transacciones del técnico
-export const TRANSACTIONS = [
-  {
-    id: 'tx-001',
-    date: '2026-04-15',
-    clientName: CLIENT.name,
-    service: 'Instalación eléctrica residencial',
-    amount: 1050,
-    status: 'completed' as const,
-    paymentMethod: 'Transferencia',
-  },
-  {
-    id: 'tx-002',
-    date: '2026-04-12',
-    clientName: 'Roberto Silva Méndez',
-    service: 'Mantenimiento preventivo',
-    amount: 650,
-    status: 'completed' as const,
-    paymentMethod: 'Efectivo',
-  },
-  {
-    id: 'tx-003',
-    date: '2026-04-10',
-    clientName: 'Ana Patricia Jiménez',
-    service: 'Reparación urgente',
-    amount: 1200,
-    status: 'completed' as const,
-    paymentMethod: 'Tarjeta',
-  },
-  {
-    id: 'tx-004',
-    date: '2026-04-08',
-    clientName: CLIENT.name,
-    service: 'Revisión general',
-    amount: 750,
-    status: 'completed' as const,
-    paymentMethod: 'Transferencia',
-  },
-  {
-    id: 'tx-005',
-    date: '2026-04-22',
-    clientName: 'Luis Enrique Mora',
-    service: 'Instalación de contactos',
-    amount: 900,
-    status: 'pending' as const,
-    paymentMethod: 'Transferencia',
-  },
-  {
-    id: 'tx-006',
-    date: '2026-04-05',
-    clientName: 'Patricia Díaz Soto',
-    service: 'Instalación de luminarias',
-    amount: 480,
-    status: 'completed' as const,
-    paymentMethod: 'Efectivo',
-  },
-  {
-    id: 'tx-007',
-    date: '2026-04-03',
-    clientName: 'Jorge Medina Castillo',
-    service: 'Cambio de cableado',
-    amount: 1400,
-    status: 'completed' as const,
-    paymentMethod: 'Tarjeta',
-  },
-  {
-    id: 'tx-008',
-    date: '2026-04-23',
-    clientName: 'Roberto Silva Méndez',
-    service: 'Mantenimiento de tablero',
-    amount: 700,
-    status: 'pending' as const,
-    paymentMethod: 'Efectivo',
-  },
-];
+// VACÍO PARA CUENTAS NUEVAS DE TÉCNICOS
+export const TRANSACTIONS = [];
 
 // Historial completo de trabajos del técnico
 export const JOB_HISTORY = [
