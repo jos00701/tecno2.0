@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Delegaciones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: #667eea !important;
+            font-size: 1.5rem;
+        }
+
+        .container-main {
+            padding: 30px 0;
+            min-height: 100vh;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+            padding: 20px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-filter {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn-filter.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-filter:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .filtros-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .tabla-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.3s;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .notificacion {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notificacion.error {
+            border-left-color: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            padding: 10px 15px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .estadisticas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card h6 {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .numero {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #764ba2;
+        }
+
+        .conectado {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #28a745;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+            }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            margin-top: 40px;
+        }
+
+        .buscador-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .delegacion-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .delegacion-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .delegacion-btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-hospital"></i> Sistema de Delegaciones
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="ms-auto">
+                    <span class="conectado"></span>
+                    <span id="estado-conexion">Conectado</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="container-main">
+        <div class="container">
+            <!-- ESTADÍSTICAS -->
+            <div class="estadisticas" id="estadisticas-container"></div>
+
+            <!-- FILTROS Y BÚSQUEDA -->
+            <div class="filtros-section">
+                <h5 class="mb-4"><i class="fas fa-filter"></i> Búsqueda y Filtros</h5>
+
+                <div class="buscador-section">
+                    <input type="text" id="buscar-curp" class="form-control" placeholder="🔍 Buscar por CURP">
+                    <input type="text" id="buscar-rfc" class="form-control" placeholder="🔍 Buscar por RFC">
+                    <input type="text" id="buscar-numero" class="form-control" placeholder="🔍 Buscar por Número de Empleado">
+                    <input type="text" id="buscar-nombre" class="form-control" placeholder="🔍 Buscar por Nombre">
+                </div>
+
+                <h6 class="mt-4 mb-3">Filtrar por Delegación:</h6>
+                <div id="delegaciones-container" class="mb-4"></div>
+
+                <h6 class="mb-3">Filtrar por Tipo de Institución:</h6>
+                <div id="tipos-container" class="mb-4"></div>
+
+                <div class="d-grid gap-2 d-md-flex">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgregar">
+                        <i class="fas fa-plus"></i> Agregar Persona
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalImportar">
+                        <i class="fas fa-upload"></i> Importar Excel
+                    </button>
+                    <button class="btn btn-secondary" id="limpiar-filtros">
+                        <i class="fas fa-redo"></i> Limpiar Filtros
+                    </button>
+                </div>
+            </div>
+
+            <!-- TABLA DE DATOS -->
+            <div class="tabla-container">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>CURP</th>
+                            <th>RFC</th>
+                            <th>Número de Empleado</th>
+                            <th>Nombre Completo</th>
+                            <th>Delegación</th>
+                            <th>Tipo de Institución</th>
+                            <th>Correo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-personas">
+                        <tr>
+                            <td colspan="9" class="text-center p-4">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINACIÓN -->
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center" id="paginacion"></ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- MODAL AGREGAR PERSONA -->
+    <div class="modal fade" id="modalAgregar" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-plus"></i> Agregar Nueva Persona</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formulario-agregar">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">CURP <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="curp" maxlength="18" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">RFC</label>
+                                    <input type="text" class="form-control" id="rfc" maxlength="13">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Número de Empleado</label>
+                                    <input type="number" class="form-control" id="numero_empleado">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nombre" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Apellido Paterno</label>
+                                    <input type="text" class="form-control" id="apellido_paterno">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Apellido Materno</label>
+                                    <input type="text" class="form-control" id="apellido_materno">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Delegación</label>
+                                    <input type="text" class="form-control" id="delegacion">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo de Institución <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="tipo_institucion" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Hospital">Hospital</option>
+                                        <option value="Centro de Salud">Centro de Salud</option>
+                                        <option value="Jurisdicción">Jurisdicción</option>
+                                        <option value="Clínica">Clínica</option>
+                                        <option value="Centro Comunitario">Centro Comunitario</option>
+                                        <option value="Otros">Otros</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Correo</label>
+                                    <input type="email" class="form-control" id="correo">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-control" id="telefono">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarPersona()">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IMPORTAR EXCEL -->
+    <div class="modal fade" id="modalImportar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-upload"></i> Importar desde Excel</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong>Formato esperado:</strong> curp, rfc, numero_empleado, nombre, apellido_paterno, apellido_materno, delegacion, tipo_institucion, correo, telefono
+                    </div>
+                    <input type="file" class="form-control" id="archivo-excel" accept=".xlsx,.xls,.csv" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="importarExcel()">
+                        <i class="fas fa-cloud-upload-alt"></i> Importar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR PERSONA -->
+    <div class="modal fade" id="modalEditar" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Editar Persona</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formulario-editar">
+                        <input type="hidden" id="editar-id">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">CURP (No se puede editar)</label>
+                                    <input type="text" class="form-control" id="editar-curp" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="editar-nombre">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Apellido Paterno</label>
+                                    <input type="text" class="form-control" id="editar-apellido-paterno">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Delegación</label>
+                                    <input type="text" class="form-control" id="editar-delegacion">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo de Institución</label>
+                                    <select class="form-control" id="editar-tipo">
+                                        <option value="Hospital">Hospital</option>
+                                        <option value="Centro de Salud">Centro de Salud</option>
+                                        <option value="Jurisdicción">Jurisdicción</option>
+                                        <option value="Clínica">Clínica</option>
+                                        <option value="Centro Comunitario">Centro Comunitario</option>
+                                        <option value="Otros">Otros</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Correo</label>
+                                    <input type="email" class="form-control" id="editar-correo">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-control" id="editar-telefono">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Estado</label>
+                            <select class="form-control" id="editar-estado">
+                                <option value="activo">Activo</option>
+                                <option value="inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarEdicion()">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p>&copy; 2025 Sistema de Delegaciones - Todos los derechos reservados</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
