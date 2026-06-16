@@ -36,6 +36,47 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Delegaciones de CDMX
+const delegacionesCDMX = [
+  'Álvaro Obregón',
+  'Azcapotzalco',
+  'Benito Juárez',
+  'Coyoacán',
+  'Cuajimalpa de Morelos',
+  'Cuauhtémoc',
+  'Gustavo A. Madero',
+  'Iztacalco',
+  'Iztapalapa',
+  'La Magdalena Contreras',
+  'Miguel Hidalgo',
+  'Milpa Alta',
+  'Tláhuac',
+  'Tlalpan',
+  'Xochimilco',
+  'Venustiano Carranza'
+];
+
+// Función para detectar delegación por palabras clave en correo o nombre
+function detectarDelegacion(email, nombre, delegacionOriginal) {
+  // Si ya tiene delegación asignada, usarla
+  if (delegacionOriginal && delegacionesCDMX.includes(delegacionOriginal)) {
+    return delegacionOriginal;
+  }
+
+  // Buscar en el email
+  if (email) {
+    const emailLower = email.toLowerCase();
+    for (let delegacion of delegacionesCDMX) {
+      if (emailLower.includes(delegacion.toLowerCase().substring(0, 5))) {
+        return delegacion;
+      }
+    }
+  }
+
+  // Por defecto, asignar a Benito Juárez (central)
+  return 'Benito Juárez';
+}
+
 // Conectar a la BD y crear tablas
 async function initializeDatabase() {
   try {
@@ -50,7 +91,7 @@ async function initializeDatabase() {
         nombre VARCHAR(150) NOT NULL,
         apellido_paterno VARCHAR(100),
         apellido_materno VARCHAR(100),
-        delegacion VARCHAR(100),
+        delegacion VARCHAR(100) NOT NULL DEFAULT 'Benito Juárez',
         tipo_institucion ENUM('Hospital', 'Centro de Salud', 'Jurisdicción', 'Clínica', 'Centro Comunitario', 'Otros') NOT NULL,
         correo VARCHAR(150),
         telefono VARCHAR(15),
@@ -97,7 +138,7 @@ initializeDatabase();
 
 // ==================== RUTAS ====================
 
-// 1. OBTENER TODAS LAS PERSONAS (con filtros)
+// 1. OBTENER TODAS LAS PERSONAS (con filtros - SOLO CDMX)
 app.get('/api/personas', async (req, res) => {
   try {
     const { 
@@ -172,21 +213,9 @@ app.get('/api/personas', async (req, res) => {
   }
 });
 
-// 2. OBTENER UNA PERSONA POR ID
-app.get('/api/personas/:id', async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    const [personas] = await connection.query('SELECT * FROM personas WHERE id = ?', [req.params.id]);
-    connection.release();
-
-    if (personas.length === 0) {
-      return res.status(404).json({ success: false, error: 'Persona no encontrada' });
-    }
-
-    res.json({ success: true, datos: personas[0] });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+// 2. OBTENER DELEGACIONES DISPONIBLES
+app.get('/api/delegaciones', (req, res) => {
+  res.json({ success: true, delegaciones: delegacionesCDMX });
 });
 
 // 3. CREAR NUEVA PERSONA
@@ -198,18 +227,22 @@ app.post('/api/personas', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Faltan campos obligatorios' });
     }
 
+    // Validar y detectar delegación
+    const delegacionFinal = delegacion && delegacionesCDMX.includes(delegacion) 
+      ? delegacion 
+      : detectarDelegacion(correo, nombre, delegacion);
+
     const connection = await pool.getConnection();
     const [result] = await connection.query(
       'INSERT INTO personas (curp, rfc, numero_empleado, nombre, apellido_paterno, apellido_materno, delegacion, tipo_institucion, correo, telefono, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [curp, rfc, numero_empleado, nombre, apellido_paterno, apellido_materno, delegacion, tipo_institucion, correo, telefono, creado_por]
+      [curp, rfc, numero_empleado, nombre, apellido_paterno, apellido_materno, delegacionFinal, tipo_institucion, correo, telefono, creado_por]
     );
 
-    // Notificar a través de WebSocket
-    io.emit('persona-nueva', { id: result.insertId, ...req.body });
+    io.emit('persona-nueva', { id: result.insertId, ...req.body, delegacion: delegacionFinal });
 
     connection.release();
 
-    res.status(201).json({ success: true, id: result.insertId, mensaje: 'Persona creada exitosamente' });
+    res.status(201).json({ success: true, id: result.insertId, delegacion: delegacionFinal, mensaje: 'Persona creada exitosamente' });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -229,19 +262,20 @@ app.put('/api/personas/:id', async (req, res) => {
 
     const { nombre, apellido_paterno, apellido_materno, delegacion, tipo_institucion, correo, telefono, estado, actualizado_por } = req.body;
 
+    // Validar delegación
+    const delegacionFinal = delegacion && delegacionesCDMX.includes(delegacion) ? delegacion : personaActual[0].delegacion;
+
     const [result] = await connection.query(
       'UPDATE personas SET nombre = ?, apellido_paterno = ?, apellido_materno = ?, delegacion = ?, tipo_institucion = ?, correo = ?, telefono = ?, estado = ?, actualizado_por = ? WHERE id = ?',
-      [nombre, apellido_paterno, apellido_materno, delegacion, tipo_institucion, correo, telefono, estado, actualizado_por, req.params.id]
+      [nombre, apellido_paterno, apellido_materno, delegacionFinal, tipo_institucion, correo, telefono, estado, actualizado_por, req.params.id]
     );
 
-    // Registrar en auditoría
     await connection.query(
       'INSERT INTO auditoria (persona_id, accion, datos_anteriores, datos_nuevos, usuario) VALUES (?, ?, ?, ?, ?)',
       [req.params.id, 'ACTUALIZACIÓN', JSON.stringify(personaActual[0]), JSON.stringify(req.body), actualizado_por]
     );
 
-    // Notificar cambio a todos los clientes conectados
-    io.emit('persona-actualizada', { id: req.params.id, ...req.body });
+    io.emit('persona-actualizada', { id: req.params.id, ...req.body, delegacion: delegacionFinal });
 
     connection.release();
 
@@ -262,7 +296,6 @@ app.delete('/api/personas/:id', async (req, res) => {
 
     await connection.query('DELETE FROM personas WHERE id = ?', [req.params.id]);
 
-    // Registrar en auditoría
     await connection.query(
       'INSERT INTO auditoria (persona_id, accion, datos_anteriores, usuario) VALUES (?, ?, ?, ?)',
       [req.params.id, 'ELIMINACIÓN', JSON.stringify(personaActual[0]), eliminado_por]
@@ -278,7 +311,7 @@ app.delete('/api/personas/:id', async (req, res) => {
   }
 });
 
-// 6. IMPORTAR DESDE EXCEL
+// 6. IMPORTAR DESDE EXCEL CON DETECCIÓN AUTOMÁTICA DE DELEGACIÓN
 app.post('/api/importar-excel', upload.single('archivo'), async (req, res) => {
   try {
     if (!req.file) {
@@ -292,38 +325,62 @@ app.post('/api/importar-excel', upload.single('archivo'), async (req, res) => {
     const connection = await pool.getConnection();
     let insertados = 0;
     let errores = [];
+    let resumenDelegaciones = {};
 
     for (const fila of datos) {
       try {
+        // Detectar automáticamente la delegación
+        const delegacion = detectarDelegacion(fila.correo, fila.nombre, fila.delegacion);
+        
+        // Contar por delegación
+        resumenDelegaciones[delegacion] = (resumenDelegaciones[delegacion] || 0) + 1;
+
         await connection.query(
-          'INSERT INTO personas (curp, rfc, numero_empleado, nombre, apellido_paterno, apellido_materno, delegacion, tipo_institucion, correo, telefono) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [fila.curp, fila.rfc, fila.numero_empleado, fila.nombre, fila.apellido_paterno, fila.apellido_materno, fila.delegacion, fila.tipo_institucion, fila.correo, fila.telefono]
+          'INSERT INTO personas (curp, rfc, numero_empleado, nombre, apellido_paterno, apellido_materno, delegacion, tipo_institucion, correo, telefono, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            fila.curp?.toUpperCase(), 
+            fila.rfc?.toUpperCase(), 
+            fila.numero_empleado, 
+            fila.nombre, 
+            fila.apellido_paterno, 
+            fila.apellido_materno, 
+            delegacion, 
+            fila.tipo_institucion, 
+            fila.correo, 
+            fila.telefono,
+            'importacion_excel'
+          ]
         );
         insertados++;
       } catch (err) {
-        errores.push(`Fila ${fila.nombre}: ${err.message}`);
+        errores.push(`${fila.nombre || 'Sin nombre'}: ${err.message.substring(0, 50)}`);
       }
     }
 
     connection.release();
 
-    // Notificar a todos los clientes
-    io.emit('datos-importados', { insertados, total: datos.length });
+    io.emit('datos-importados', { insertados, total: datos.length, resumenDelegaciones });
 
-    res.json({ success: true, insertados, total: datos.length, errores });
+    res.json({ 
+      success: true, 
+      insertados, 
+      total: datos.length, 
+      errores,
+      resumenDelegaciones 
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// 7. OBTENER ESTADÍSTICAS
+// 7. OBTENER ESTADÍSTICAS POR DELEGACIÓN
 app.get('/api/estadisticas', async (req, res) => {
   try {
     const connection = await pool.getConnection();
 
     const [total] = await connection.query('SELECT COUNT(*) as total FROM personas');
-    const [porDelegacion] = await connection.query('SELECT delegacion, COUNT(*) as cantidad FROM personas GROUP BY delegacion');
-    const [porTipo] = await connection.query('SELECT tipo_institucion, COUNT(*) as cantidad FROM personas GROUP BY tipo_institucion');
+    const [porDelegacion] = await connection.query('SELECT delegacion, COUNT(*) as cantidad FROM personas GROUP BY delegacion ORDER BY cantidad DESC');
+    const [porTipo] = await connection.query('SELECT tipo_institucion, COUNT(*) as cantidad FROM personas GROUP BY tipo_institucion ORDER BY cantidad DESC');
 
     connection.release();
 
@@ -351,4 +408,5 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
+  console.log(`📍 Sistema configurado para CDMX y sus ${delegacionesCDMX.length} delegaciones`);
 });
